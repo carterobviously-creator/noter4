@@ -2,19 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Noter4 AI — WebLLM Edition</title>
-  <link rel="stylesheet" href="noter4.css" />
+  <title>Noter4 AI</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
   <div id="app">
-    <h1>Noter4 AI (WebLLM)</h1>
+    <header>
+      <h1>Noter4 AI</h1>
+      <select id="model">
+        <option value="noter4">Noter4 (Fast)</option>
+        <option value="noter4plus">Noter4+ (Deep Mode)</option>
+      </select>
+    </header>
 
     <textarea id="prompt" placeholder="Ask Noter4 anything..."></textarea>
 
-    <button id="run">Run Noter4 AI</button>
+    <button id="run">Run</button>
 
-    <pre id="output"></pre>
+    <div id="output-container">
+      <pre id="output"></pre>
+    </div>
   </div>
 
   <script type="module" src="noter4.js"></script>
