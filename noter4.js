@@ -1,4 +1,4 @@
-const worker = new Worker("webllm.worker.js", { type: "module" });
+const worker = new Worker("webllm.worker.js"); // CLASSIC WORKER
 
 const output = document.getElementById("output");
 
