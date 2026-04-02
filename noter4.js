@@ -4,14 +4,18 @@ let chat = null;
 
 async function loadModel() {
   const output = document.getElementById("output");
-  output.textContent = "Loading Noter4 AI model... (first time may take a minute)";
+  output.textContent = "Loading Noter4 AI model... (first load may take a minute)";
 
-  chat = await CreateWebLLMChat({
-    model: "phi-3-mini",
-    model_url: "./models/phi-3-mini-q4f16.bin"
-  });
+  try {
+    chat = await CreateWebLLMChat({
+      model: "phi3-mini-4k-instruct-q4f16_1"
+    });
 
-  output.textContent = "Model loaded. Noter4 AI is ready.";
+    output.textContent = "Model loaded. Noter4 AI is ready.";
+  } catch (err) {
+    output.textContent = "Failed to load model. Your browser must support WebGPU.";
+    console.error(err);
+  }
 }
 
 async function runNoter4() {
@@ -25,11 +29,16 @@ async function runNoter4() {
 
   output.textContent = "";
 
-  const reply = await chat.generate(prompt, {
-    stream: (token) => {
-      output.textContent += token;
-    }
-  });
+  try {
+    await chat.generate(prompt, {
+      stream: (token) => {
+        output.textContent += token;
+      }
+    });
+  } catch (err) {
+    output.textContent = "Error running Noter4 AI.";
+    console.error(err);
+  }
 }
 
 document.getElementById("run").onclick = runNoter4;
