@@ -8,10 +8,10 @@ async function loadModel() {
 
   try {
     engine = await webllm.CreateMLCEngine(
-      "phi3-mini-4k-instruct-q4f16_1",   // MODEL ID
+      "phi3-mini-4k-instruct-q4f16_1",
       {
         initProgressCallback: (progress) => {
-          output.textContent = `Loading: ${progress.progress * 100}%`;
+          output.textContent = `Loading: ${Math.floor(progress.progress * 100)}%`;
         }
       }
     );
