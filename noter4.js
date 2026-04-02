@@ -1,25 +1,59 @@
-const worker = new Worker("webllm.worker.js"); // CLASSIC WORKER
+import { pipeline } from "https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js";
 
-const output = document.getElementById("output");
+let noter4Pipe = null;
+let noter4PlusPipe = null;
 
-worker.onmessage = (event) => {
-  const { type, data } = event.data;
+const PLUS_LIMIT = 5;
+const PLUS_WINDOW_MS = 10 * 60 * 1000;
+let plusCalls = [];
 
-  if (type === "progress") {
-    output.textContent = `Loading: ${Math.floor(data * 100)}%`;
-  }
+async function loadModels() {
+  const output = document.getElementById("output");
+  output.textContent = "Loading Noter4 models...";
 
-  if (type === "ready") {
-    output.textContent = "Model loaded. Noter4 AI is ready.";
-  }
+  noter4Pipe = await pipeline("text-generation", "Xenova/phi-2");
+  noter4PlusPipe = await pipeline("text-generation", "Xenova/llama-3-8b");
 
-  if (type === "token") {
-    output.textContent += data;
-  }
-};
+  output.textContent = "Models loaded. Noter4 is ready.";
+}
 
-document.getElementById("run").onclick = () => {
+function canUseNoter4Plus() {
+  const now = Date.now();
+  plusCalls = plusCalls.filter(t => now - t < PLUS_WINDOW_MS);
+  return plusCalls.length < PLUS_LIMIT;
+}
+
+async function runNoter4() {
   const prompt = document.getElementById("prompt").value;
+  const modelChoice = document.getElementById("model").value;
+  const output = document.getElementById("output");
+
+  if (!noter4Pipe || !noter4PlusPipe) {
+    output.textContent = "Models still loading...";
+    return;
+  }
+
   output.textContent = "";
-  worker.postMessage({ type: "prompt", data: prompt });
-};
+
+  let pipe = noter4Pipe;
+
+  if (modelChoice === "noter4plus") {
+    if (!canUseNoter4Plus()) {
+      output.textContent = "Noter4+ rate limit reached. Try again later.";
+      return;
+    }
+    plusCalls.push(Date.now());
+    pipe = noter4PlusPipe;
+  }
+
+  const result = await pipe(prompt, {
+    max_new_tokens: 150,
+    temperature: 0.7
+  });
+
+  output.textContent = result[0].generated_text;
+}
+
+document.getElementById("run").onclick = runNoter4;
+
+loadModels();
