@@ -1,15 +1,20 @@
-import { CreateWebLLMChat } from "https://unpkg.com/webllm";
+import * as webllm from "https://unpkg.com/webllm/dist/webllm.min.js";
 
-let chat = null;
+let engine = null;
 
 async function loadModel() {
   const output = document.getElementById("output");
-  output.textContent = "Loading Noter4 AI model... (first load may take a minute)";
+  output.textContent = "Loading Noter4 AI model...";
 
   try {
-    chat = await CreateWebLLMChat({
-      model: "phi3-mini-4k-instruct-q4f16_1"
-    });
+    engine = await webllm.CreateMLCEngine(
+      "phi3-mini-4k-instruct-q4f16_1",   // MODEL ID
+      {
+        initProgressCallback: (progress) => {
+          output.textContent = `Loading: ${progress.progress * 100}%`;
+        }
+      }
+    );
 
     output.textContent = "Model loaded. Noter4 AI is ready.";
   } catch (err) {
@@ -22,7 +27,7 @@ async function runNoter4() {
   const prompt = document.getElementById("prompt").value;
   const output = document.getElementById("output");
 
-  if (!chat) {
+  if (!engine) {
     output.textContent = "Model not loaded yet.";
     return;
   }
@@ -30,11 +35,17 @@ async function runNoter4() {
   output.textContent = "";
 
   try {
-    await chat.generate(prompt, {
-      stream: (token) => {
-        output.textContent += token;
-      }
+    const reply = await engine.chat.completions.create({
+      messages: [
+        { role: "user", content: prompt }
+      ],
+      stream: true
     });
+
+    for await (const chunk of reply) {
+      const token = chunk.choices[0]?.delta?.content || "";
+      output.textContent += token;
+    }
   } catch (err) {
     output.textContent = "Error running Noter4 AI.";
     console.error(err);
